@@ -32,3 +32,15 @@ Actual: with 238 copies of nDPI files in one CPG, Joern appends
 `<duplicate>N` to full names (`init_protocol_defaults<duplicate>1`).
 Next time: key methods by (filename, short name), never by full name, when
 one CPG holds several versions of the same file.
+
+## "Has no identifiers" isn't the same as "is constant"
+
+Expected: a size argument with no identifiers in its AST is a constant, and
+one with identifiers isn't.
+Actual: `sizeof(packet->field)` contains identifiers but is fixed at compile
+time. 1,305 of 3,434 `risky_copy` findings (38%) were this false alarm. I
+found it by reading the findings while writing the walkthrough, after the
+first evaluation run.
+Next time: dump a sample of each rule's findings and read them before the
+first scored run. Decide constness from node types (literal, `sizeOf`,
+operators over constants), not from "contains an identifier".
