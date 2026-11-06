@@ -1,0 +1,11 @@
+# Cloned repos, downloads, extracted files, Joern workspaces, outputs
+data/
+workspace/
+out/
+__pycache__/
+*.pyc
+
+# Scratch files that never get committed
+PLAN.md
+AUDIT.md
+SECURITY.md
