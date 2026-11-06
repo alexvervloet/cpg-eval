@@ -44,3 +44,13 @@ first evaluation run.
 Next time: dump a sample of each rule's findings and read them before the
 first scored run. Decide constness from node types (literal, `sizeOf`,
 operators over constants), not from "contains an identifier".
+
+## importCpg doesn't reuse a workspace project, it duplicates it
+
+Expected: with `workspace/cpg.bin` already there, `importCpg` would reopen
+that project and score a stale graph. `run.sh` cleared `workspace/` for that
+reason.
+Actual: Joern created `cpg.bin1` next to it and loaded the new graph. The
+real cost was a fresh 68 MB copy on every run.
+Next time: test a tool's behaviour before writing the reason into a comment.
+The fix was right, but the comment explaining it was wrong until I checked.
