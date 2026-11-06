@@ -5,7 +5,7 @@
 // Writes outDir/methods.json and outDir/findings.json. Filenames are as the
 // CPG stores them, relative to the directory given to joern-parse.
 
-import io.shiftleft.codepropertygraph.generated.nodes.{Call, Expression, Method}
+import io.shiftleft.codepropertygraph.generated.nodes.{Call, Expression, Literal, Method}
 
 // Size or length argument (1-based) for calls that copy a bounded amount.
 val sizedCalls = Map(
@@ -20,8 +20,14 @@ val comparisons = Set(
   "<operator>.greaterThan", "<operator>.greaterEqualsThan",
 )
 
-def isConstant(e: Expression): Boolean =
-  e.ast.isIdentifier.isEmpty && e.ast.isCall.nameNot("<operator>.*").isEmpty
+// sizeof(x) is fixed at compile time even though x is an identifier.
+// Macros defined in headers Joern didn't see still parse as identifiers.
+def isConstant(e: Expression): Boolean = e match {
+  case _: Literal => true
+  case c: Call if c.name == "<operator>.sizeOf" => true
+  case c: Call if c.name.startsWith("<operator>.") => c.argument.l.forall(isConstant)
+  case _ => false
+}
 
 // Variant 1: risky copy with a size that isn't a compile-time constant.
 def riskyCopy(m: Method): Iterator[Call] =
