@@ -1,6 +1,10 @@
+import io
+import json
 import unittest
+import zipfile
+from contextlib import redirect_stdout
 
-from cpg_eval.osv import crash_frames, crash_type, fixes_for
+from cpg_eval.osv import crash_frames, crash_type, fixes_for, load_records
 
 DETAILS = (
     "OSS-Fuzz report: https://example.invalid/1\n\n```\n"
@@ -45,6 +49,16 @@ class OsvTest(unittest.TestCase):
 
     def test_other_packages_ignored(self):
         self.assertEqual(fixes_for([record("A", SHA)], "libxml2"), [])
+
+    def test_load_records_skips_oversized_members(self):
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("small.json", json.dumps(record("A", SHA)))
+            zf.writestr("big.json", json.dumps({"pad": "x" * 5000}))
+            zf.writestr("readme.txt", "not json")
+        with redirect_stdout(io.StringIO()):
+            records = load_records(buf.getvalue(), max_member=1000)
+        self.assertEqual([r["id"] for r in records], ["A"])
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ from pathlib import Path
 
 OSV_URL = "https://osv-vulnerabilities.storage.googleapis.com/OSS-Fuzz/all.zip"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+MAX_MEMBER_BYTES = 1 << 20  # real records are a few KB
 
 
 def crash_frames(details: str) -> list[str]:
@@ -72,14 +73,21 @@ def fixes_for(records: list[dict], package: str) -> list[dict]:
     return sorted(by_sha.values(), key=lambda f: f["published"])
 
 
-def load_records(zip_bytes: bytes) -> list[dict]:
+def load_records(zip_bytes: bytes, max_member: int = MAX_MEMBER_BYTES) -> list[dict]:
     # Read members in memory instead of extracting, so archive paths never
-    # touch the filesystem.
+    # touch the filesystem. Reading at most max_member + 1 bytes caps memory
+    # even if a member's header understates its size.
     records = []
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
         for name in zf.namelist():
-            if name.endswith(".json"):
-                records.append(json.loads(zf.read(name)))
+            if not name.endswith(".json"):
+                continue
+            with zf.open(name) as fh:
+                data = fh.read(max_member + 1)
+            if len(data) > max_member:
+                print(f"skip oversized zip member {name!r}")
+                continue
+            records.append(json.loads(data))
     return records
 
 
