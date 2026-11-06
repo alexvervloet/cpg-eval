@@ -39,8 +39,8 @@ precision numbers usually go wrong.
 
 | split | variant | pairs | TP | FP | precision | 95% CI | correct | both | neither | reversed |
 |---|---|---|---|---|---|---|---|---|---|---|
-| dev | any | 48 | 32 | 29 | 0.525 | 0.50-0.56 | 3 | 29 | 16 | 0 |
-| dev | risky_copy | 48 | 24 | 24 | 0.500 | 0.50-0.50 | 0 | 24 | 24 | 0 |
+| dev | any | 48 | 26 | 24 | 0.520 | 0.48-0.56 | 3 | 23 | 21 | 1 |
+| dev | risky_copy | 48 | 18 | 19 | 0.486 | 0.45-0.50 | 0 | 18 | 29 | 1 |
 | dev | unchecked_index | 48 | 24 | 21 | 0.533 | 0.50-0.58 | 3 | 21 | 24 | 0 |
 | test | unchecked_index (chosen) | 41 | 16 | 15 | 0.516 | 0.50-0.56 | 1 | 15 | 25 | 0 |
 
@@ -71,6 +71,13 @@ Both variants are CPG queries in `joern/extract.sc`.
   index variables never appear in a `<`, `<=`, `>` or `>=` comparison in the
   same function.
 - `any` is the union of the two, computed in `evaluate.py`.
+
+`risky_copy` treats literals, `sizeof` and operators over those as constant.
+The first version treated any identifier as variable, so `sizeof(buf)`
+counted as a variable size, and 1,305 of its 3,434 findings were that kind
+of false alarm. The fix came from reading the findings, not from test
+scores. It changed `risky_copy`'s dev numbers but not the dev choice, so the
+test row is the same before and after.
 
 The index rule matches on identifiers, so `flow->x[flow->n]` reduces to the
 identifier `flow`. Any comparison involving `flow` anywhere in the function
