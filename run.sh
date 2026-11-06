@@ -27,8 +27,8 @@ echo "== building the CPG"
 joern-parse data/files -o out/cpg.bin --language c > out/joern-parse.log 2>&1
 
 echo "== extracting methods and findings"
-# importCpg reuses an existing workspace project of the same name, which would
-# silently score a stale graph. Start clean.
+# importCpg makes a new workspace project each run (cpg.bin, cpg.bin1, ...),
+# each a full copy of the graph. Start clean so they don't pile up.
 rm -rf workspace
 joern --script joern/extract.sc --param cpgFile=out/cpg.bin --param outDir=out 2>&1 | grep -v WARN
 
