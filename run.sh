@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end: OSV labels -> mined files -> Joern CPG -> pairs -> precision report.
-# Needs git, python3 (3.10+) and joern / joern-parse on PATH. No paid APIs.
+# Needs git, curl, python3 (3.10+) and joern / joern-parse on PATH. No paid APIs.
 set -euo pipefail
 cd "$(dirname "$0")"
 
